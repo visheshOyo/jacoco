@@ -24,9 +24,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class KotlinWhenSealedFilterTest implements IFilterOutput {
+public class KotlinWhenFilterTest implements IFilterOutput {
 
-	private final KotlinWhenSealedFilter filter = new KotlinWhenSealedFilter();
+	private final KotlinWhenFilter filter = new KotlinWhenFilter();
 
 	private final MethodNode m = new MethodNode(InstrSupport.ASM_API_VERSION, 0,
 			"name", "()V", null, null);
@@ -87,6 +87,34 @@ public class KotlinWhenSealedFilterTest implements IFilterOutput {
 		filter.filter(m, new FilterContextMock(), this);
 
 		assertEquals(0, ignoredRanges.size());
+	}
+
+	@Test
+	public void should_filter_implicit_default() {
+		final Label label = new Label();
+
+		m.visitInsn(Opcodes.NOP);
+
+		m.visitTableSwitchInsn(0, 3, label);
+
+		m.visitInsn(Opcodes.NOP);
+
+		final Range range1 = new Range();
+		m.visitLabel(label);
+		range1.fromInclusive = m.instructions.getLast();
+		m.visitTypeInsn(Opcodes.NEW, "kotlin/NoWhenBranchMatchedException");
+		m.visitInsn(Opcodes.DUP);
+		m.visitMethodInsn(Opcodes.INVOKESPECIAL,
+			"kotlin/NoWhenBranchMatchedException", "<init>", "()V", false);
+		m.visitInsn(Opcodes.ATHROW);
+		range1.toInclusive = m.instructions.getLast();
+
+		filter.filter(m, new FilterContextMock(), this);
+
+		assertEquals(1, ignoredRanges.size());
+
+		assertEquals(range1.fromInclusive, ignoredRanges.get(0).fromInclusive);
+		assertEquals(range1.toInclusive, ignoredRanges.get(0).toInclusive);
 	}
 
 	static class Range {

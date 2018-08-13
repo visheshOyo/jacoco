@@ -34,7 +34,7 @@ public final class Filters implements IFilter {
 			new StringSwitchJavacFilter(), new LombokGeneratedFilter(),
 			new GroovyGeneratedFilter(), new EnumEmptyConstructorFilter(),
 			new KotlinGeneratedFilter(), new KotlinLateinitFilter(),
-			new KotlinWhenSealedFilter());
+			new KotlinWhenFilter());
 
 	private final IFilter[] filters;
 

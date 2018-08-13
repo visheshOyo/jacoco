@@ -31,6 +31,7 @@ import org.jacoco.core.internal.flow.MethodProbesVisitor;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
@@ -355,8 +356,16 @@ public class MethodAnalyzer extends MethodProbesVisitor
 	public void visitEnd() {
 		// Wire jumps:
 		for (final Jump j : jumps) {
-			LabelInfo.getInstruction(j.target).setPredecessor(j.source,
-					j.branch);
+
+			final Instruction target = LabelInfo.getInstruction(j.target);
+			final int sourceOpcode = j.source.getNode().getOpcode();
+			if ((sourceOpcode == Opcodes.LOOKUPSWITCH
+					|| sourceOpcode == Opcodes.TABLESWITCH)
+					&& ignored.contains(target.getNode())) {
+				continue;
+			}
+
+			target.setPredecessor(j.source, j.branch);
 		}
 		// Propagate probe values:
 		for (final CoveredProbe p : coveredProbes) {
