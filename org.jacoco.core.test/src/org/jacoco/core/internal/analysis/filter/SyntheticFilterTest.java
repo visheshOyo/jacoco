@@ -11,22 +11,14 @@
  *******************************************************************************/
 package org.jacoco.core.internal.analysis.filter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
-
 import org.jacoco.core.internal.instr.InstrSupport;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
-public class SyntheticFilterTest implements IFilterOutput {
+public class SyntheticFilterTest extends FilterTestBase {
 
 	private final SyntheticFilter filter = new SyntheticFilter();
-
-	private AbstractInsnNode fromInclusive;
-	private AbstractInsnNode toInclusive;
 
 	@Test
 	public void testNonSynthetic() {
@@ -34,10 +26,9 @@ public class SyntheticFilterTest implements IFilterOutput {
 				"name", "()V", null, null);
 		m.visitInsn(Opcodes.NOP);
 
-		filter.filter(m, new FilterContextMock(), this);
+		filter.filter(m, context, output);
 
-		assertNull(fromInclusive);
-		assertNull(toInclusive);
+		assertIgnored();
 	}
 
 	@Test
@@ -46,10 +37,9 @@ public class SyntheticFilterTest implements IFilterOutput {
 				Opcodes.ACC_SYNTHETIC, "name", "()V", null, null);
 		m.visitInsn(Opcodes.NOP);
 
-		filter.filter(m, new FilterContextMock(), this);
+		filter.filter(m, new FilterContextMock(), output);
 
-		assertEquals(m.instructions.getFirst(), fromInclusive);
-		assertEquals(m.instructions.getLast(), toInclusive);
+		assertMethodIgnored(m);
 	}
 
 	@Test
@@ -58,21 +48,9 @@ public class SyntheticFilterTest implements IFilterOutput {
 				Opcodes.ACC_SYNTHETIC, "lambda$1", "()V", null, null);
 		m.visitInsn(Opcodes.NOP);
 
-		filter.filter(m, new FilterContextMock(), this);
+		filter.filter(m, context, output);
 
-		assertNull(fromInclusive);
-		assertNull(toInclusive);
-	}
-
-	public void ignore(final AbstractInsnNode fromInclusive,
-			final AbstractInsnNode toInclusive) {
-		assertNull(this.fromInclusive);
-		this.fromInclusive = fromInclusive;
-		this.toInclusive = toInclusive;
-	}
-
-	public void merge(final AbstractInsnNode i1, final AbstractInsnNode i2) {
-		fail();
+		assertIgnored();
 	}
 
 }
